@@ -1,0 +1,383 @@
+<html>
+	<head>
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, user-scalable=no"
+		/>
+		<link href="stylesheets/style.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div id="container">
+			<div id="arena"></div>
+			<div id="msg"></div>
+			<div id="keyboard">
+				<div class="letter">ا</div>
+				<div class="letter">ب</div>
+				<div class="letter">ت</div>
+				<div class="letter">ث</div>
+				<div class="letter">ج</div>
+				<div class="letter">ح</div>
+				<div class="letter">خ</div>
+				<div class="letter">د</div>
+				<div class="letter">ذ</div>
+				<div class="letter">ر</div>
+				<div class="letter">ز</div>
+				<div class="letter">س</div>
+				<div class="letter">ش</div>
+				<div class="letter">ص</div>
+				<div class="letter">ض</div>
+				<div class="letter">ط</div>
+				<div class="letter">ظ</div>
+				<div class="letter">ع</div>
+				<div class="letter">غ</div>
+				<div class="letter">ف</div>
+				<div id="check">✔</div>
+				<div class="letter">ق</div>
+				<div class="letter">ك</div>
+				<div class="letter">ل</div>
+				<div class="letter">م</div>
+				<div class="letter">ن</div>
+				<div class="letter">ه</div>
+				<div class="letter">و</div>
+				<div class="letter">ي</div>
+				<div id="delete">
+					<img
+						src="images/delete.png
+					"
+						height="30px"
+					/>
+				</div>
+				<div class=""></div>
+				<div class="letter">آ</div>
+				<div class="letter">أ</div>
+				<div class="letter">إ</div>
+				<div class="letter">ؤ</div>
+				<div class="letter">ى</div>
+				<div class="letter">ئ</div>
+				<div class="letter">ء</div>
+				<div class="letter">ة</div>
+			</div>
+			<div id="footer">
+				<img src="images/kalemat _logo.png" alt="Logo" height="100px" />
+			</div>
+			<div><button class="open button">مساعدة</button></div>
+		</div>
+		<script src="javascripts/jquery.3.6.min.js"></script>
+		<script>
+			$(document).ready(function () {
+				function main() {
+					new Game(getQueryVariable("id"));
+				}
+
+				function getQueryVariable(variable) {
+					var query = window.location.search.substring(1);
+					var vars = query.split("&");
+					for (var i = 0; i < vars.length; i++) {
+						var pair = vars[i].split("=");
+						if (decodeURIComponent(pair[0]) == variable) {
+							return decodeURIComponent(pair[1]);
+						}
+					}
+					console.log("Query variable %s not found", variable);
+				}
+
+				class Game {
+					constructor(id) {
+						this.id = id;
+						this.letter = 0;
+						this.load();
+					}
+
+					load() {
+						let that = this;
+						$.get(`/attempt/get/${this.id}`, function (data) {
+							// override
+							that.wordSize = data.theWordLength;
+							that.attempts = data.attempts;
+							that.won = data.won;
+							that.lost = data.lost;
+							that.word = data.theWord;
+							that.attemptMaxTimes = data.ATTEMPT_MAX_TIMES;
+
+							that.drawGrid(data.state);
+						});
+					}
+
+					drawGrid(state) {
+						let square = this.attemptMaxTimes * this.wordSize;
+						for (var i = 0; i < square; i++) {
+							var space = $("<div class='space'></div>");
+							if (state[i]) {
+								space.addClass(this.colorLetter(state[i].position));
+								space.html(state[i].letter);
+							}
+							$("#arena").append(space);
+						}
+						$("#arena").css(
+							"grid-template-columns",
+							"1fr ".repeat(this.wordSize)
+						);
+						$("#arena").css(
+							"grid-template-rows",
+							"1fr ".repeat(this.attemptMaxTimes)
+						);
+						if (this.won || this.lost) {
+							this.displayWord(this.word);
+						} else {
+							this.attachEvents();
+						}
+					}
+
+					isWordServer(word) {
+						let that = this;
+						$.get(`/isWord/${word}`, function (data) {
+							if (data == "a_word") {
+								that.attemptServer(word);
+							} else if (data == "not_a_word") {
+								that.displayMsg("ليست كلمة", "red");
+							}
+						});
+					}
+
+					colorLetter(position) {
+						let colorClass;
+						if (position == "exact") {
+							colorClass = "green";
+						} else if (position == "exist") {
+							colorClass = "orange";
+						} else if (position == "notExist") {
+							colorClass = "dark";
+						}
+						return colorClass;
+					}
+
+					displayWord(revealWord) {
+						let color;
+						if (this.won) {
+							color = "green";
+						} else {
+							color = "orange";
+						}
+						this.displayMsg(
+							`<a target="_blank" style='color:${color}; text-decoration:none;' href="https://www.almaany.com/quran-b/${revealWord}/?utm_source=kalemat.pro"> ${revealWord} </a>`,
+							color,
+							1
+						);
+					}
+					attemptServer(word) {
+						let that = this;
+						$.get(`/attempt/${that.id}/${word}`, function (data) {
+							let entries = Object.entries(data.result);
+
+							if (data.revealWord) {
+								that.won = data.won;
+								that.lost = !data.won;
+								that.displayWord(data.revealWord);
+							}
+
+							for (const [key, value] of entries) {
+								let colorClass = that.colorLetter(value.position);
+
+								$(
+									`.space:nth-child(${
+										parseInt(key) + 1 + that.attempts * that.wordSize
+									})`
+								).addClass(`${colorClass}`);
+							}
+
+							that.attempts++;
+							that.letter = 0;
+							$("#check").removeClass("green");
+						});
+					}
+
+					displayMsg(msg, color, stick) {
+						$("#msg").html(`<span> ${msg} </span>`);
+						$("#msg").css("color", color);
+						$("#msg").html(msg);
+						if (!stick) {
+							setTimeout(function () {
+								$("#msg").html(``);
+							}, 4000);
+						}
+					}
+
+					attachEvents() {
+						let that = this;
+						$(".letter").click(function () {
+							if (that.letter == that.wordSize || that.won) {
+								return;
+							} else {
+								that.letter++;
+								$(
+									`.space:nth-child(${
+										that.letter + that.attempts * that.wordSize
+									})`
+								).html($(this).html());
+
+								if (that.letter == that.wordSize) {
+									$("#check").addClass("green");
+								}
+							}
+						});
+
+						$("#delete").click(function () {
+							if (that.letter != 0) {
+								$("#check").removeClass("green");
+								$(
+									`.space:nth-child(${
+										that.letter + that.attempts * that.wordSize
+									})`
+								).html("");
+
+								that.letter--;
+							}
+						});
+
+						$("#check").click(function () {
+							if (that.letter != that.wordSize) {
+								return;
+							}
+
+							if (that.attempts == that.attemptMaxTimes) {
+								return;
+							}
+
+							if (that.won || that.list) {
+								return;
+							}
+
+							let firstletter = 1 + that.wordSize * that.attempts;
+							let lastletter = 1 + that.wordSize * (that.attempts + 1);
+							let word = [];
+							for (let i = firstletter; i < lastletter; i++) {
+								word.push($(`.space:nth-child(${i})`).html());
+							}
+							word = word.join("");
+
+							that.isWordServer(word);
+						});
+					}
+				}
+				main();
+			});
+		</script>
+
+		<!-- Popup section-->
+		<link rel="stylesheet" href="stylesheets/popup.css" />
+
+		<div class="popup-overlay">
+			<!--Creates the popup content-->
+			<div class="popup-content">
+				<h2>توضيح</h2>
+				<div class="popup-body">
+					<div style="background: orange; height: 20px; width: 20px"></div>
+					<p>البرتقالي يدل على أن الحرف في الكلمة ولكن في غير موضعه.</p>
+					<div style="background: green; height: 20px; width: 20px"></div>
+					<p>الأخضر يدل على أن الحرف في الكلمة وفي موضعه.</p>
+
+					<div style="background: dimgray; height: 20px; width: 20px"></div>
+					<p>الرمادي الداكن يدل على أن الحرف ليس في الكلمة.</p>
+
+					<div>ملاحظة</div>
+					<p>
+						الكلمات بدون شدة ّ، مثال كلمة <mark> فولّوا </mark> ستكون في هذا
+						السياق <mark>فولوا</mark>.
+					</p>
+
+					<!--popup's close button-->
+				</div>
+				<button class="close button">إغلاق</button>
+			</div>
+		</div>
+
+		<script>
+			$(".open").on("click", function () {
+				$(".popup, .popup-content").addClass("active");
+			});
+			$(".close, .popup").on("click", function () {
+				$(".popup, .popup-content").removeClass("active");
+			});
+		</script>
+
+		<!-- END Popup section-->
+
+		<style>
+			#arena {
+				display: grid;
+				grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+				grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+				gap: 3px 3px;
+			}
+
+			.space {
+				border-radius: 5px;
+				background-color: #eee;
+				border-color: #eee;
+				font-size: xx-large;
+				color: black;
+				/* follwing three lines for vertical align of text */
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+		</style>
+		<style>
+			#keyboard {
+				display: grid;
+				grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+				grid-template-rows: 1fr 1fr 1fr 1fr;
+				gap: 10px 5px;
+			}
+
+			#container {
+				display: grid;
+				grid-template-columns: 1fr;
+				grid-template-rows: 8fr 2fr 6fr;
+				max-width: 95%;
+				margin: 0 auto;
+			}
+
+			#footer {
+				text-align: center;
+				margin-top: 10px;
+			}
+
+			#msg {
+				text-align: center;
+				font-size: xx-large;
+			}
+
+			.letter,
+			#delete,
+			#check {
+				border-radius: 5px;
+				background-color: burlywood;
+				color: white;
+				font-size: xx-large;
+				/* follwing three lines for vertical align of text */
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+		</style>
+
+		<style>
+			#check.green {
+				background-color: yellowgreen;
+			}
+
+			.green {
+				background-color: green;
+			}
+
+			.orange {
+				background-color: orange;
+			}
+
+			.dark {
+				background-color: dimgray;
+			}
+		</style>
+	</body>
+</html>
