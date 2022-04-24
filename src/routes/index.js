@@ -56,17 +56,6 @@ router.get("/attempt/:id/:word", async function (req, res, next) {
 	}
 
 	for (let i = 0; i < theWordLength; i++) {
-		// let index = theWord.indexOf(word[i]);
-		// if (index == i) {
-		// 	theWord = theWord.replace(word[i], "-");
-		// 	element = { letter: word[i], position: "exact" };
-		// } else if (index > -1 && theWord[index] !== word[index]) {
-		// 	element = { letter: word[i], position: "exist" };
-		// 	won = false;
-		// } else {
-		// 	element = { letter: word[i], position: "notExist" };
-		// 	won = false;
-		// }
 		if (theWord[i] == word[i]) {
 			element = { index: i, letter: word[i], position: "exact" };
 			theWord = theWord.replace(word[i], "-");
@@ -75,8 +64,6 @@ router.get("/attempt/:id/:word", async function (req, res, next) {
 			await Attempt.updateOne({ _id: id }, { $push: { state: element } });
 		}
 	}
-
-	console.log("1", result);
 
 	if (!won)
 		for (let i = 0; i < theWordLength; i++) {
@@ -94,8 +81,6 @@ router.get("/attempt/:id/:word", async function (req, res, next) {
 				await Attempt.updateOne({ _id: id }, { $push: { state: element } });
 			}
 		}
-
-	console.log("2", result);
 
 	await Attempt.updateOne(
 		{ _id: id },

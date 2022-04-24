@@ -85,6 +85,7 @@
 					constructor(id) {
 						this.id = id;
 						this.letter = 0;
+						this.checkClickDisabled = false;
 						this.load();
 					}
 
@@ -129,6 +130,8 @@
 					}
 
 					isWordServer(word) {
+						// disable button to prevent double click
+
 						let that = this;
 						$.get(`/isWord/${word}`, function (data) {
 							if (data == "a_word") {
@@ -190,6 +193,8 @@
 							that.attempts++;
 							that.letter = 0;
 							$("#check").removeClass("green");
+							// enable button
+							that.checkClickDisabled = false;
 						});
 					}
 
@@ -237,6 +242,11 @@
 						});
 
 						$("#check").click(function () {
+							if (that.checkClickDisabled) {
+								return;
+							}
+							that.checkClickDisabled = true;
+
 							if (that.letter != that.wordSize) {
 								return;
 							}
