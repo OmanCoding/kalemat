@@ -152,14 +152,16 @@
 					}
 
 					displayWord(revealWord) {
-						let color;
+						let color, icon;
 						if (this.won) {
 							color = "green";
+							icon = "✅ 🔗";
 						} else {
 							color = "orange";
+							icon = "🔗";
 						}
 						this.displayMsg(
-							`<a target="_blank" style='color:${color}; text-decoration:none;' href="https://www.almaany.com/quran-b/${revealWord}/?utm_source=kalemat.pro"> ${revealWord} </a>`,
+							`<a target="_blank" style='color:${color}; text-decoration:none;' href="https://www.almaany.com/quran-b/${revealWord}/?utm_source=kalemat.pro"> ${icon} ${revealWord} </a>`,
 							color,
 							1
 						);

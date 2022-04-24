@@ -50,21 +50,53 @@ router.get("/attempt/:id/:word", async function (req, res, next) {
 
 	// check number of attempts and won lost
 	let theWordLength = attempt.theWordLength;
-	for (let i = 0; i < theWordLength; i++) {
-		let index = theWord.indexOf(word[i]);
-		if (index == i) {
-			theWord = theWord.replace(word[i], "-");
-			element = { letter: word[i], position: "exact" };
-		} else if (index > -1) {
-			element = { letter: word[i], position: "exist" };
-			won = false;
-		} else {
-			element = { letter: word[i], position: "notExist" };
-			won = false;
-		}
-		result.push(element);
-		await Attempt.updateOne({ _id: id }, { $push: { state: element } });
+
+	if (theWord !== word) {
+		won = false;
 	}
+
+	for (let i = 0; i < theWordLength; i++) {
+		// let index = theWord.indexOf(word[i]);
+		// if (index == i) {
+		// 	theWord = theWord.replace(word[i], "-");
+		// 	element = { letter: word[i], position: "exact" };
+		// } else if (index > -1 && theWord[index] !== word[index]) {
+		// 	element = { letter: word[i], position: "exist" };
+		// 	won = false;
+		// } else {
+		// 	element = { letter: word[i], position: "notExist" };
+		// 	won = false;
+		// }
+		if (theWord[i] == word[i]) {
+			element = { index: i, letter: word[i], position: "exact" };
+			theWord = theWord.replace(word[i], "-");
+			word = word.replace(word[i], "*");
+			result[i] = element;
+			await Attempt.updateOne({ _id: id }, { $push: { state: element } });
+		}
+	}
+
+	console.log("1", result);
+
+	if (!won)
+		for (let i = 0; i < theWordLength; i++) {
+			if (word[i] !== "*") {
+				let index = theWord.indexOf(word[i]);
+				if (index > -1) {
+					element = { index: i, letter: word[i], position: "exist" };
+					result[i] = element;
+					theWord = theWord.replace(word[i], "-");
+					word = word.replace(word[i], "*");
+				} else {
+					element = { index: i, letter: word[i], position: "notExist" };
+					result[i] = element;
+				}
+				await Attempt.updateOne({ _id: id }, { $push: { state: element } });
+			}
+		}
+
+	console.log("2", result);
+
 	await Attempt.updateOne(
 		{ _id: id },
 		{
