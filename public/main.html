@@ -100,16 +100,24 @@
 							that.word = data.theWord;
 							that.attemptMaxTimes = data.ATTEMPT_MAX_TIMES;
 
-							that.drawGrid(data.state);
+							that.drawGrid(data.state.flat());
 						});
 					}
 
 					drawGrid(state) {
 						let square = this.attemptMaxTimes * this.wordSize;
+						console.log(this.attemptMaxTimes, this.wordSize, this, square);
+
 						for (var i = 0; i < square; i++) {
 							var space = $("<div class='space'></div>");
 							if (state[i]) {
-								space.addClass(this.colorLetter(state[i].position));
+								let color = this.colorByPosition(state[i].position);
+								space.css("background", color);
+								$(`.letter:contains(${state[i].letter})`).css(
+									"background",
+									color
+								);
+								console.log(state[i].letter);
 								space.html(state[i].letter);
 							}
 							$("#arena").append(space);
@@ -130,28 +138,27 @@
 					}
 
 					isWordServer(word) {
-						// disable button to prevent double click
-
 						let that = this;
 						$.get(`/isWord/${word}`, function (data) {
 							if (data == "a_word") {
 								that.attemptServer(word);
 							} else if (data == "not_a_word") {
 								that.displayMsg("ليست كلمة", "red");
+								that.checkClickDisabled = false;
 							}
 						});
 					}
 
-					colorLetter(position) {
-						let colorClass;
+					colorByPosition(position) {
+						let color;
 						if (position == "exact") {
-							colorClass = "green";
+							color = "green";
 						} else if (position == "exist") {
-							colorClass = "orange";
+							color = "orange";
 						} else if (position == "notExist") {
-							colorClass = "dark";
+							color = "dimgrey";
 						}
-						return colorClass;
+						return color;
 					}
 
 					displayWord(revealWord) {
@@ -181,13 +188,15 @@
 							}
 
 							for (const [key, value] of entries) {
-								let colorClass = that.colorLetter(value.position);
+								let color = that.colorByPosition(value.position);
+
+								$(`.letter:contains(${value.letter})`).css("background", color);
 
 								$(
 									`.space:nth-child(${
 										parseInt(key) + 1 + that.attempts * that.wordSize
 									})`
-								).addClass(`${colorClass}`);
+								).css("background", color);
 							}
 
 							that.attempts++;

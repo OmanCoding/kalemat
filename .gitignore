@@ -131,3 +131,5 @@ dist
 
 .DS_Store
 todo.txt
+data/once/
+data/once/*

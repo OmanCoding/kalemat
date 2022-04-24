@@ -30,12 +30,15 @@ router.get("/quran/new", async function (req, res, next) {
 
 router.get("/attempt/get/:id", async function (req, res, next) {
 	let attempt = await Attempt.findOne({ _id: req.params.id });
+	attempt = attempt.toObject();
+
 	if (!(attempt.won || attempt.lost)) {
-		attempt = attempt.toObject();
+		// Don't reveal the word to user till end
 		delete attempt.theWord;
-		attempt.ATTEMPT_MAX_TIMES = ATTEMPT_MAX_TIMES;
-		console.log(attempt);
 	}
+	attempt.ATTEMPT_MAX_TIMES = ATTEMPT_MAX_TIMES;
+	console.log(attempt);
+
 	res.json(attempt);
 });
 
@@ -61,7 +64,7 @@ router.get("/attempt/:id/:word", async function (req, res, next) {
 			theWord = theWord.replace(word[i], "-");
 			word = word.replace(word[i], "*");
 			result[i] = element;
-			await Attempt.updateOne({ _id: id }, { $push: { state: element } });
+			//await Attempt.updateOne({ _id: id }, { $push: { state: element } });
 		}
 	}
 
@@ -78,9 +81,10 @@ router.get("/attempt/:id/:word", async function (req, res, next) {
 					element = { index: i, letter: word[i], position: "notExist" };
 					result[i] = element;
 				}
-				await Attempt.updateOne({ _id: id }, { $push: { state: element } });
 			}
 		}
+
+	await Attempt.updateOne({ _id: id }, { $push: { state: result } });
 
 	await Attempt.updateOne(
 		{ _id: id },
