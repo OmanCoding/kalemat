@@ -12,7 +12,7 @@ var app = express();
 
 // Connect to MongoDB database
 mongoose
-	.connect("mongodb://localhost:27000/kalematDB", { useNewUrlParser: true })
+	.connect("mongodb://172.17.0.2:27017/kalematDB", { useNewUrlParser: true })
 	.then(() => {
 		console.info("✅  MongoDB - serverDB is connected ");
 	});
