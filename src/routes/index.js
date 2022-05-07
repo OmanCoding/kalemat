@@ -37,7 +37,7 @@ router.get("/attempt/get/:id", async function (req, res, next) {
 		delete attempt.theWord;
 	}
 	attempt.ATTEMPT_MAX_TIMES = ATTEMPT_MAX_TIMES;
-	console.log(attempt);
+	//console.log(attempt);
 
 	res.json(attempt);
 });
