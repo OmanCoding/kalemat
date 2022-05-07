@@ -5,6 +5,23 @@
 			content="width=device-width, initial-scale=1, user-scalable=no"
 		/>
 		<link href="stylesheets/style.css" rel="stylesheet" />
+		<script src="/javascripts/bundle.js"></script>
+		<script>
+			Sentry.init({
+				dsn: "https://40e00078841f4f768d77f93c0a47b698@o1235179.ingest.sentry.io/6385097",
+				integrations: [new BrowserTracing()],
+
+				// Set tracesSampleRate to 1.0 to capture 100%
+				// of transactions for performance monitoring.
+				// We recommend adjusting this value in production
+				tracesSampleRate: 1.0,
+			});
+
+			// Enabling the debug mode flag is useful during implementation,
+			// but it's recommended you remove it for production
+			mixpanel.init("6be776f9cc714160011a2038432da322", { debug: true });
+			mixpanel.track("Main.html");
+		</script>
 	</head>
 	<body>
 		<div id="container">

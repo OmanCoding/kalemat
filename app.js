@@ -8,14 +8,14 @@ const mongoose = require("mongoose");
 var indexRouter = require("./src/routes/index");
 var usersRouter = require("./src/routes/users");
 
+require("dotenv").config();
+
 var app = express();
 
 // Connect to MongoDB database
-mongoose
-	.connect("mongodb://172.17.0.2:27017/kalematDB", { useNewUrlParser: true })
-	.then(() => {
-		console.info("✅  MongoDB - serverDB is connected ");
-	});
+mongoose.connect(process.env.MONGOURL, { useNewUrlParser: true }).then(() => {
+	console.info("✅  MongoDB - serverDB is connected ");
+});
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
